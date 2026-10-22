@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>網頁範例</title>
+  <!-- 思源黑體 (Noto Sans TC) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --nav-h: 56px;               /* navigator 高度 */
+      --banner-h: 160px;           /* 上方 Banner 高度 */
+      --section-banner-h: 440px;   /* 區段 Banner 高度 */
+      --teal: #1aa3b3;             /* Banner 藍綠色 */
+      --orange: #f0552a;           /* 區段 Banner 橘紅色 */
+      --light-gray: #f2f2f2;       /* 很淺的灰色 */
+      --card-gray: #e3e3e3;        /* 比周圍淺灰再深一點的灰色 */
+      --dark-gray: #555555;        /* 深灰色字 */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 錨點連結平滑捲動（JS 無法執行時的備援） */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Noto Sans TC", "Source Han Sans TC", "思源黑體", sans-serif;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    /* ===== 上方 Banner ===== */
+    .banner {
+      background: var(--teal);
+      height: var(--banner-h);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .banner h1 {
+      color: #000000;
+      font-size: 2.5rem;
+      font-weight: 700;
+    }
+
+    /* ===== Navigator ===== */
+    .navigator {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      height: var(--nav-h);
+      background: var(--light-gray);
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 0 40px;
+      gap: 24px;
+    }
+
+    .navigator a {
+      text-decoration: none;
+      color: var(--dark-gray);
+      font-size: 1rem;
+      transition: color 0.2s;
+    }
+
+    .navigator a:hover {
+      color: #000000;
+    }
+
+    .navigator a.home {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: #000000;
+    }
+
+    /* ===== 區段 ===== */
+    .section {
+      /* 區段前方留 navigator 兩倍高度的空白 */
+      padding-top: calc(var(--nav-h) * 2);
+      /* 捲動定位時跳過上方空白，讓 navigator 剛好貼在橘色 Banner 上方
+         （navigator 高度 − 上方空白高度） */
+      scroll-margin-top: calc(var(--nav-h) * -1);
+    }
+
+    /* 區段1：空白只留 navigator 一倍高（加上 navigator 本身共兩倍高） */
+    #section1 {
+      padding-top: var(--nav-h);
+      scroll-margin-top: 0;
+    }
+
+    .section-banner {
+      background: var(--orange);
+      height: var(--section-banner-h);
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .section-banner h2 {
+      color: #ffffff;
+      font-size: 2rem;   /* 略小於上方 Banner */
+      font-weight: 700;
+    }
+
+    .section-body {
+      background: var(--light-gray);
+      padding: 48px 16px 520px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;   /* 正中間靠上方 */
+    }
+
+    .section-card {
+      background: var(--card-gray);
+      border-radius: 10px;
+      padding: 32px 40px;
+      max-width: 720px;
+      width: 100%;
+    }
+
+    .section-card h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .section-card p {
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .section-card p:last-child {
+      margin-bottom: 0;
+    }
+
+    @media (max-width: 480px) {
+      .navigator { gap: 16px; padding: 0 16px; }
+      .section-card { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="banner" id="top">
+    <h1>這裡是Banner</h1>
+  </header>
+
+  <nav class="navigator">
+    <a href="#top" class="home" data-target="top">首頁</a>
+    <a href="#section1" data-target="section1">區段1</a>
+    <a href="#section2" data-target="section2">區段2</a>
+    <a href="#section3" data-target="section3">區段3</a>
+  </nav>
+
+  <section class="section" id="section1">
+    <div class="section-banner">
+      <h2>區段1 Banner</h2>
+    </div>
+    <div class="section-body">
+      <div class="section-card">
+        <h3>區段1 內容</h3>
+        <p>這是區段1的內容。Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in libero nec dolor luctus bibendum.</p>
+        <p>Quisque vel quam nec massa dictum varius ac eu urna. Suspendisse ut tristique ex.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="section2">
+    <div class="section-banner">
+      <h2>區段2 Banner</h2>
+    </div>
+    <div class="section-body">
+      <div class="section-card">
+        <h3>區段2 內容</h3>
+        <p>這是區段2的內容。Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in libero nec dolor luctus bibendum.</p>
+        <p>Quisque vel quam nec massa dictum varius ac eu urna. Suspendisse ut tristique ex.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="section3">
+    <div class="section-banner">
+      <h2>區段3 Banner</h2>
+    </div>
+    <div class="section-body">
+      <div class="section-card">
+        <h3>區段3 內容</h3>
+        <p>這是區段3的內容。Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in libero nec dolor luctus bibendum.</p>
+        <p>Quisque vel quam nec massa dictum varius ac eu urna. Suspendisse ut tristique ex.</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    document.querySelectorAll('.navigator a').forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        var target = link.dataset.target;
+
+        if (target === 'top') {
+          // 首頁：回到網頁最上方
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          // 區段1 2 3：平滑滑動到對應區段，讓 navigator 剛好貼在橘色 Banner 上方
+          var banner = document.querySelector('#' + target + ' .section-banner');
+          var navHeight = document.querySelector('.navigator').offsetHeight;
+          var top = banner.getBoundingClientRect().top + window.scrollY - navHeight;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
