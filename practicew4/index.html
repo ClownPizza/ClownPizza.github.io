@@ -1,1 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Base Layout</title>
+<style>
+  :root {
+    --banner-h: 80px;
+    --nav-w: 200px;
+    --beige: #f5efe0;
+    --dark-gray: #444444;
+    --light-gray: #e0e0e0;
+    --indigo: #3f4a9e;
+    --light-pink: #f9d5e0;
+    --title-size: 32px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "Times New Roman", Times, serif;
+    background: #fff;
+  }
+
+  /* Banner: 固定於上方 */
+  .banner {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: var(--banner-h);
+    background: var(--beige);
+    color: var(--dark-gray);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 24px;
+    font-size: var(--title-size);
+    font-weight: normal;
+    z-index: 100;
+  }
+
+  /* 導覽列: 固定於左側 */
+  .nav {
+    position: fixed;
+    top: var(--banner-h);
+    left: 0;
+    width: var(--nav-w);
+    height: calc(100vh - var(--banner-h));
+    display: flex;
+    flex-direction: column;
+    z-index: 50;
+  }
+  .nav a {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: var(--light-gray);
+    color: var(--indigo);
+    text-decoration: none;
+    font-size: 20px;
+  }
+  .nav a:hover { background: var(--light-pink); }
+
+  /* 主要區域 */
+  .layout {
+    display: flex;
+    align-items: stretch;
+    margin-top: var(--banner-h);
+    margin-left: var(--nav-w);
+    min-height: 200vh;
+  }
+
+  /* 內文區域 */
+  .content {
+    flex: 1;
+    position: relative;
+    z-index: 10;          /* 文字置於最前方 */
+    padding: 40px 24px;
+  }
+  .content h2 {
+    font-size: var(--title-size);
+    font-weight: normal;
+    color: #000;
+    text-align: left;
+    margin-bottom: 400px; /* 每個標題之間的空白 */
+  }
+  .content h2:last-child { margin-bottom: 0; }
+
+  /* 右側資訊色塊: 隨頁面捲動 */
+  .info {
+    width: 240px;
+    background: var(--light-pink);
+    color: #000;
+    padding: 40px 24px;
+    font-size: 20px;
+  }
+
+  /* Footer */
+  .footer {
+    position: relative;
+    z-index: 60;
+    background: var(--dark-gray);
+    color: #000;
+    padding: 40px 24px;
+    font-size: 20px;
+  }
+</style>
+</head>
+<body>
+
+  <header class="banner">Here is Banner</header>
+
+  <nav class="nav">
+    <a href="#scene01">Scene01</a>
+    <a href="#scene02">Scene02</a>
+    <a href="#scene03">Scene03</a>
+    <a href="#scene04">Scene04</a>
+  </nav>
+
+  <div class="layout">
+    <main class="content">
+      <h2 id="scene01">Scene01</h2>
+      <h2 id="scene02">Scene02</h2>
+      <h2 id="scene03">Scene03</h2>
+      <h2 id="scene04">Scene04</h2>
+    </main>
+    <aside class="info">Information</aside>
+  </div>
+
+  <footer class="footer">Here is footer</footer>
+
+</body>
+</html>
 
