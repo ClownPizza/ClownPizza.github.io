@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>成長</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@300;400&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+body { margin: 0; }
+img { max-width: 100%; }
+
+/* Layout: one fixed "stage" — the watercolor scene stays put while scrolling swaps the year;
+   captions rise from below the picture like a turning page. Deliberately single light theme:
+   the paintings are on white paper, so the page is that paper. */
+:root {
+  --paper: #fbfcf7;      /* matches the watercolor sheet edge */
+  --ink: #3d3a33;        /* soft pencil brown-black */
+  --ink-soft: #8a8475;   /* faded pencil for labels */
+  --leaf: #7f9a6a;       /* the sapling green, used once for the active year */
+  --rule: #e4e2d6;
+  --font-text: "LXGW WenKai TC", "Kaiti TC", "BiauKai", "STKaiti", serif;
+  --font-num: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  color-scheme: light;
+}
+html { background: var(--paper); }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- opening ---------- */
+.intro {
+  min-height: 78svh;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: 18px;
+  padding-block: 12svh 6svh;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  width: min(100%, 760px);
+  margin-inline: auto;
+}
+.intro h1 {
+  margin: 0;
+  font-weight: 400;
+  font-size: clamp(52px, 10vw, 104px);
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.intro p {
+  margin: 0;
+  font-family: var(--font-num);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.hint {
+  margin-top: 6svh;
+  font-size: 14px;
+  color: var(--ink-soft);
+  letter-spacing: 0.3em;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hint::after {
+  content: "";
+  width: 1px; height: 36px;
+  background: var(--ink-soft);
+  animation: drip 2.4s ease-in-out infinite;
+  transform-origin: top;
+}
+@keyframes drip { 0%{transform:scaleY(0);opacity:1} 60%{transform:scaleY(1);opacity:1} 100%{transform:scaleY(1);opacity:0} }
+
+/* ---------- story ---------- */
+.story { position: relative; height: 700svh; }
+.stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  align-content: center;
+  gap: clamp(8px, 2svh, 20px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow: hidden;
+}
+.frame {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, calc((100svh - 170px) * 16 / 9));
+  aspect-ratio: 1376 / 768;
+  max-width: 100%;
+}
+.frame img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.frame img:first-child { opacity: 1; }
+
+.captions {
+  position: relative;
+  width: min(100%, calc((100svh - 170px) * 16 / 9));
+  height: 120px;
+  max-width: 100%;
+}
+.cap {
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: clamp(16px, 4vw, 40px);
+  align-items: baseline;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.cap .year {
+  font-family: var(--font-num);
+  font-weight: 400;
+  font-size: clamp(34px, 5vw, 52px);
+  line-height: 1;
+  font-variant-numeric: tabular-nums lining-nums;
+  color: var(--ink);
+}
+.cap .text {
+  margin: 0;
+  min-width: 0;
+  font-size: clamp(19px, 2.4vw, 26px);
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+}
+.cap .height {
+  grid-column: 2;
+  margin-top: 6px;
+  font-family: var(--font-num);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.cap .height span { font-family: var(--font-text); font-style: normal; font-size: 13px; letter-spacing: 0.2em; margin-right: 8px; }
+
+/* ---------- year rail ---------- */
+.rail {
+  position: fixed;
+  right: max(20px, calc(env(safe-area-inset-right, 0px) + 20px));
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  gap: 14px;
+  margin: 0; padding: 0;
+  list-style: none;
+  opacity: 0;
+  transition: opacity .4s ease;
+  z-index: 5;
+}
+.rail.on { opacity: 1; }
+.rail button {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: flex-end;
+  font-family: var(--font-num);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  transition: color .3s ease;
+}
+.rail button::after {
+  content: "";
+  width: 14px; height: 1px;
+  background: currentColor;
+  transition: width .3s ease;
+}
+.rail button[aria-current="true"] { color: var(--leaf); }
+.rail button[aria-current="true"]::after { width: 28px; }
+.rail button:focus-visible { outline: 1px solid var(--leaf); outline-offset: 4px; }
+
+
+@media (min-width: 901px) {
+  .frame, .captions { width: min(calc(100vw - 340px), calc((100svh - 170px) * 16 / 9)); }
+  /* the picture's own paper margin already gives the caption its left inset */
+  .captions { padding-left: 3%; }
+}
+@media (max-width: 900px) { .rail { display: none; } }
+@media (max-width: 560px) {
+  .frame, .captions { width: 100%; }
+  .captions { height: 170px; }
+  .cap { grid-template-columns: 1fr; row-gap: 8px; }
+  .cap .height { grid-column: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hint::after { animation: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>成長</h1>
+  <p>a seed, a tree, three people</p>
+  <div class="hint">往下捲動</div>
+</header>
+
+<section class="story" id="story" aria-label="故事">
+  <div class="stage">
+    <div class="frame">
+      <img src="img/story01.webp" alt="春天早晨，奶奶和五歲的女孩跪在石頭圍成的花圃裡，奶奶掌心放著一顆種子。">
+      <img src="img/story02.webp" alt="夏天，十歲的女孩背著書包，用綠色澆水壺替及腰的樹苗澆水。">
+      <img src="img/story03.webp" alt="秋天，樹已比人高，奶奶坐在長椅上，十八歲的她拖著行李箱走向遠方。">
+      <img src="img/story04.webp" alt="冬天下雪，長椅和石柱上的澆水壺都積了雪，樹枝光禿，沒有人。">
+      <img src="img/story05.webp" alt="春天，樹開滿粉色的花，長大的她牽著戴紅緞帶的女兒站在樹下。">
+      <img src="img/story06.webp" alt="黃昏，大樹旁多了一個新的石頭花圃，她和女兒跪在裡面，她掌心放著一顆種子。">
+    </div>
+    <div class="captions" aria-live="polite">
+      <div class="cap"><span class="year">1998</span><p class="text">「要等很久喔。」奶奶說。</p><span class="height"><span>樹高</span>0 cm</span></div>
+      <div class="cap"><span class="year">2003</span><p class="text">它還沒有她高。</p><span class="height"><span>樹高</span>90 cm</span></div>
+      <div class="cap"><span class="year">2011</span><p class="text">它比她高了。她要去很遠的地方唸書。</p><span class="height"><span>樹高</span>2.4 m</span></div>
+      <div class="cap"><span class="year">2019</span><p class="text">澆水壺一直放在那裡。</p><span class="height"><span>樹高</span>6 m</span></div>
+      <div class="cap"><span class="year">2026</span><p class="text">她回來的時候，剛好開花。</p><span class="height"><span>樹高</span>8 m</span></div>
+      <div class="cap"><span class="year">2026</span><p class="text">「要等很久喔。」她說。</p><span class="height"><span>樹高</span>8 m / 0 cm</span></div>
+    </div>
+  </div>
+</section>
+
+<ol class="rail" aria-label="年份">
+  <li><button type="button" data-i="0">1998</button></li>
+  <li><button type="button" data-i="1">2003</button></li>
+  <li><button type="button" data-i="2">2011</button></li>
+  <li><button type="button" data-i="3">2019</button></li>
+  <li><button type="button" data-i="4">2026 午</button></li>
+  <li><button type="button" data-i="5">2026 暮</button></li>
+</ol>
+
+
+<script>
+(function () {
+  var story = document.getElementById('story');
+  var imgs = Array.prototype.slice.call(document.querySelectorAll('.frame img'));
+  var caps = Array.prototype.slice.call(document.querySelectorAll('.cap'));
+  var rail = document.querySelector('.rail');
+  var railBtns = Array.prototype.slice.call(rail.querySelectorAll('button'));
+  var N = imgs.length;
+  var HOLD = 0.4;            // share of each step spent resting on a picture
+  var TAIL = 0.7;            // extra scroll that rests on the final picture
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ticking = false;
+
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function smooth(t) { return t * t * (3 - 2 * t); }
+
+  // raw scroll progress through the story, 0 .. N-1
+  function rawProgress() {
+    var rect = story.getBoundingClientRect();
+    var total = story.offsetHeight - window.innerHeight;
+    return clamp(-rect.top / total, 0, 1) * (N - 1 + TAIL);
+  }
+  // picture progress with rests: holds on each picture, then crossfades
+  function eased(r) {
+    r = Math.min(r, N - 1);
+    var s = Math.min(Math.floor(r), N - 2);
+    var f = r - s;
+    return s + smooth(clamp((f - HOLD) / (1 - HOLD), 0, 1));
+  }
+
+  function render() {
+    ticking = false;
+    var r = rawProgress();
+    var p = eased(r);
+    var shown = Math.round(p);
+
+    imgs.forEach(function (img, i) {
+      if (i === 0) return;
+      var o = clamp(p - (i - 1), 0, 1);
+      img.style.opacity = o;
+      // the last picture is a camera move: it slides in from the right
+      if (i === N - 1 && !reduce) {
+        img.style.transform = 'translateX(' + ((1 - o) * 6).toFixed(2) + '%)';
+      }
+    });
+    if (!reduce) {
+      var last = clamp(p - (N - 2), 0, 1);
+      imgs[N - 2].style.transform = 'translateX(' + (-last * 4).toFixed(2) + '%)';
+    }
+
+    caps.forEach(function (cap, i) {
+      // each caption peaks at the moment its picture has fully settled
+      var centre = i;
+      var d = r - centre;
+      var o = i === 0 ? clamp(1 - Math.max(d, 0) / 0.45, 0, 1)
+            : i === N - 1 ? clamp(1 + Math.min(d, 0) / 0.45, 0, 1)
+            : clamp(1 - Math.abs(d) / 0.45, 0, 1);
+      cap.style.opacity = o;
+      var dy = i === N - 1 ? Math.min(d, 0) : d;   // the last line stays put once it arrives
+      if (!reduce) cap.style.transform = 'translateY(' + (-dy * 70).toFixed(1) + 'px)';
+      cap.setAttribute('aria-hidden', o < 0.5 ? 'true' : 'false');
+    });
+
+    var rect = story.getBoundingClientRect();
+    rail.classList.toggle('on', rect.top < window.innerHeight * 0.5);
+    railBtns.forEach(function (b, i) { b.setAttribute('aria-current', i === shown ? 'true' : 'false'); });
+  }
+
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(render); } }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  railBtns.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var i = +b.dataset.i;
+      var total = story.offsetHeight - window.innerHeight;
+      // land on the resting point of picture i
+      var r = i;
+      var y = window.scrollY + story.getBoundingClientRect().top + (r / (N - 1 + TAIL)) * total;
+      window.scrollTo({ top: y, behavior: reduce ? 'auto' : 'smooth' });
+    });
+  });
+
+  render();
+})();
+</script>
+
+</body>
+</html>
