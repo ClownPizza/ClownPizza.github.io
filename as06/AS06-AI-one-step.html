@@ -1,0 +1,617 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>五頁滑動示範</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: five full-height slabs on one vertical track; slab 3 (and any slab that overflows) scrolls inside itself */
+:root{
+  --ink:#141c2e; --paper:#f4f6f9; --cobalt:#2c46d6; --mist:#dde5f3; --mustard:#f0c53f;
+  --p1-bg:var(--cobalt); --p1-fg:#f4f6f9; --p1-sub:#c9d2f7;
+  --p2-bg:var(--mist);   --p2-fg:var(--ink); --p2-sub:#4a5672;
+  --p3-bg:var(--paper);  --p3-fg:var(--ink); --p3-sub:#56617a;
+  --p4-bg:var(--mustard);--p4-fg:#1d1a10;   --p4-sub:#5d4c12;
+  --p5-bg:var(--ink);    --p5-fg:#f4f6f9;   --p5-sub:#a6b0c6;
+  --card:#ffffff; --code-bg:#e6ebf3; --rule:#cfd6e3; --link:var(--cobalt);
+  --font-display:"Space Grotesk","Noto Sans TC",system-ui,sans-serif;
+  --font-body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+  --dur:700ms;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --p1-bg:#2034b0; --p1-fg:#eef1f8; --p1-sub:#b6c1ef;
+  --p2-bg:#182033; --p2-fg:#e6ebf5; --p2-sub:#9aa6bf;
+  --p3-bg:#10151f; --p3-fg:#e6ebf5; --p3-sub:#96a1b8;
+  --p4-bg:#d8ae2e; --p4-fg:#1d1a10; --p4-sub:#4f410f;
+  --p5-bg:#070a12; --p5-fg:#eef1f8; --p5-sub:#98a3ba;
+  --card:#222b40; --code-bg:#1a2232; --rule:#2b3550; --link:#8fa2ff;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --p1-bg:#2034b0; --p1-fg:#eef1f8; --p1-sub:#b6c1ef;
+  --p2-bg:#182033; --p2-fg:#e6ebf5; --p2-sub:#9aa6bf;
+  --p3-bg:#10151f; --p3-fg:#e6ebf5; --p3-sub:#96a1b8;
+  --p4-bg:#d8ae2e; --p4-fg:#1d1a10; --p4-sub:#4f410f;
+  --p5-bg:#070a12; --p5-fg:#eef1f8; --p5-sub:#98a3ba;
+  --card:#222b40; --code-bg:#1a2232; --rule:#2b3550; --link:#8fa2ff;
+  color-scheme:dark;
+}
+
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{background:var(--p1-bg);color:var(--p1-fg);font-family:var(--font-body);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+body[data-page="1"]{--ui:var(--p1-fg)} body[data-page="2"]{--ui:var(--p2-fg)} body[data-page="3"]{--ui:var(--p3-fg)}
+body[data-page="4"]{--ui:var(--p4-fg)} body[data-page="5"]{--ui:var(--p5-fg)}
+
+.viewport{position:fixed;inset:0;overflow:hidden}
+.track{height:100%;transform:translate3d(0,0,0);transition:transform var(--dur) cubic-bezier(.77,0,.18,1);will-change:transform}
+.page{height:100%;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));box-sizing:border-box;scrollbar-width:thin}
+.page:focus{outline:none}
+.inner{min-height:100%;box-sizing:border-box;max-width:1120px;margin:0 auto;
+  padding-block:calc(env(safe-area-inset-top,0px) + 76px) calc(env(safe-area-inset-bottom,0px) + 76px);
+  padding-inline:clamp(4px,4vw,56px) clamp(28px,6vw,72px)}
+.snap{display:flex;flex-direction:column;justify-content:center;gap:40px}
+
+.p1{background:var(--p1-bg);color:var(--p1-fg)} .p2{background:var(--p2-bg);color:var(--p2-fg)}
+.p3{background:var(--p3-bg);color:var(--p3-fg)} .p4{background:var(--p4-bg);color:var(--p4-fg)}
+.p5{background:var(--p5-bg);color:var(--p5-fg)}
+
+.eyebrow{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin:0;opacity:.8}
+h1,h2,h3{margin:0;text-wrap:balance}
+h1{font-weight:900;font-size:clamp(46px,9vw,118px);line-height:1.04;letter-spacing:-.02em}
+h2{font-weight:900;font-size:clamp(34px,5.6vw,68px);line-height:1.1;letter-spacing:-.01em}
+h3{font-weight:700;font-size:21px;line-height:1.4}
+p{margin:0}
+.lead{font-size:clamp(17px,1.6vw,20px);max-width:36em}
+.num{font-family:var(--font-display);font-weight:700;font-variant-numeric:tabular-nums}
+code,.mono{font-family:var(--font-mono);font-size:.9em}
+
+/* Page 1 */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(32px,6vw,96px);align-items:center}
+.hero .lead{color:var(--p1-sub);margin-top:24px}
+.hero h1{margin-top:18px}
+.stackfig{margin:0;display:flex;flex-direction:column;gap:6px;width:150px}
+.stackfig div{border:1.5px solid var(--p1-fg);border-radius:4px;height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-family:var(--font-mono);font-size:11px}
+.stackfig div.tall{height:96px;align-items:flex-start;padding-top:6px;border-style:dashed}
+.stackfig div.on{background:var(--p1-fg);color:var(--p1-bg)}
+.cue{font-family:var(--font-mono);font-size:13px;color:var(--p1-sub);display:flex;gap:10px;align-items:center}
+.cue::before{content:"";width:28px;height:1.5px;background:currentColor}
+
+/* Page 2 */
+.p2 .head{display:flex;flex-direction:column;gap:14px}
+.p2 .head p{color:var(--p2-sub);max-width:34em}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{background:var(--card);border-radius:10px;padding:24px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card .tag{font-family:var(--font-mono);font-size:12px;color:var(--p2-sub);letter-spacing:.06em}
+.card p{color:var(--p2-sub);font-size:15px}
+.card .rule{margin-top:auto;padding-top:14px;border-top:1px solid var(--rule);font-family:var(--font-mono);font-size:12.5px;color:var(--p2-fg);display:flex;flex-wrap:wrap;gap:6px 14px}
+
+/* Page 3 (long) */
+.long{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+.long .intro{display:flex;flex-direction:column;gap:20px}
+.long .intro p{color:var(--p3-sub);font-size:18px}
+.long section{display:flex;flex-direction:column;gap:14px}
+.long section p{color:var(--p3-sub)}
+.long section p strong{color:var(--p3-fg);font-weight:700}
+.edge-hint{font-family:var(--font-mono);font-size:13px;color:var(--p3-sub);border:1px dashed var(--rule);border-radius:8px;padding:12px 16px;transition:background .25s,color .25s,border-color .25s}
+.edge-hint.flash{background:var(--p3-fg);color:var(--p3-bg);border-color:var(--p3-fg)}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:480px;font-size:14.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--rule);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-weight:500;font-size:12px;letter-spacing:.06em;color:var(--p3-sub);background:var(--code-bg)}
+td.v{font-family:var(--font-mono);white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--p3-fg)}
+td{color:var(--p3-sub)} td:first-child{color:var(--p3-fg)}
+pre{margin:0;background:var(--code-bg);border-radius:8px;padding:18px 20px;overflow-x:auto;font-family:var(--font-mono);font-size:13px;line-height:1.7;color:var(--p3-fg)}
+pre .c{color:var(--p3-sub)}
+.steps{margin:0;padding-left:1.3em;color:var(--p3-sub);display:flex;flex-direction:column;gap:8px}
+.steps li::marker{font-family:var(--font-mono);color:var(--p3-fg)}
+
+/* Page 4 */
+.p4 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:clamp(32px,5vw,72px);align-items:center}
+.p4 .split > div:first-child{display:flex;flex-direction:column;gap:18px}
+.p4 .split p{color:var(--p4-sub)}
+.big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;font-family:var(--font-display);font-weight:700;font-size:clamp(40px,6vw,76px);line-height:1;letter-spacing:-.02em}
+.big small{font-size:.32em;font-family:var(--font-mono);font-weight:400;letter-spacing:0}
+.timeline{display:flex;flex-direction:column;gap:10px}
+.bar{position:relative;display:flex;height:44px;border:1.5px solid var(--p4-fg);border-radius:6px;overflow:hidden}
+.bar .seg{display:flex;align-items:center;padding:0 12px;font-family:var(--font-mono);font-size:12px;white-space:nowrap;overflow:hidden}
+.bar .move{flex:700;background:var(--p4-fg);color:var(--p4-bg)}
+.bar .rest{flex:350;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--p4-fg) 18%,transparent) 6px 8px)}
+.bar .head{position:absolute;top:-1.5px;bottom:-1.5px;left:0;width:3px;background:var(--p4-bg);box-shadow:0 0 0 1.5px var(--p4-fg);opacity:0}
+.bar.run .head{animation:sweep var(--total) linear forwards}
+@keyframes sweep{0%{left:0;opacity:1}99%{opacity:1}100%{left:calc(100% - 3px);opacity:0}}
+.timeline .scale{display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11.5px;color:var(--p4-sub)}
+.states{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;font-size:14.5px}
+.states dt,.states .k{font-family:var(--font-mono);font-size:12.5px;padding-top:2px;white-space:nowrap}
+.states .d{color:var(--p4-sub)}
+
+/* Page 5 */
+.p5 .end{display:flex;flex-direction:column;gap:28px;max-width:760px}
+.p5 .end p{color:var(--p5-sub)}
+.actions{display:flex;flex-wrap:wrap;gap:12px}
+.btn{font:inherit;font-size:15px;font-weight:500;border-radius:999px;padding:12px 22px;cursor:pointer;border:1.5px solid var(--p5-fg);background:transparent;color:var(--p5-fg);transition:background .2s,color .2s}
+.btn.primary{background:var(--mustard);border-color:var(--mustard);color:#1d1a10}
+.btn:hover{background:var(--p5-fg);color:var(--p5-bg)}
+.btn:focus-visible,.navbtn:focus-visible{outline:2px solid var(--ui);outline-offset:3px}
+.fine{font-family:var(--font-mono);font-size:12.5px;color:var(--p5-sub);border-top:1px solid color-mix(in srgb,var(--p5-fg) 18%,transparent);padding-top:18px}
+
+/* Fixed UI */
+.counter{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);left:max(16px, env(safe-area-inset-left,0px));z-index:5;
+  font-family:var(--font-mono);font-size:12.5px;color:var(--ui);display:flex;gap:12px;align-items:baseline;transition:color .4s;pointer-events:none}
+.counter b{font-family:var(--font-display);font-size:15px;font-variant-numeric:tabular-nums}
+.nav{position:fixed;right:max(12px, calc(env(safe-area-inset-right,0px) + 8px));top:50%;transform:translateY(-50%);z-index:5;display:flex;flex-direction:column;gap:6px;color:var(--ui);transition:color .4s}
+.navbtn{position:relative;width:14px;height:14px;padding:0;border:1.5px solid currentColor;border-radius:3px;background:transparent;cursor:pointer;overflow:hidden;color:inherit}
+.navbtn.tall{height:46px}
+.navbtn .fill{position:absolute;left:0;right:0;top:0;height:0;background:currentColor;opacity:.35}
+.navbtn[aria-current="true"]{background:currentColor}
+.navbtn[aria-current="true"] .fill{opacity:0}
+.navbtn::after{content:"";position:absolute;inset:-8px -10px}
+.chip{position:fixed;left:max(16px, env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);z-index:5;
+  font-family:var(--font-mono);font-size:12px;color:var(--ui);display:flex;gap:8px;align-items:center;
+  padding:7px 12px;border-radius:999px;background:color-mix(in srgb,var(--ui) 10%,transparent);border:1px solid color-mix(in srgb,var(--ui) 22%,transparent);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:color .4s;pointer-events:none;max-width:calc(100% - 32px)}
+.chip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.chip[data-state="moving"] .dot,.chip[data-state="pause"] .dot{animation:blink .5s steps(2) infinite}
+.chip .sep{opacity:.5}
+@keyframes blink{50%{opacity:.2}}
+
+@media (max-width:820px){
+  .cards{grid-template-columns:minmax(0,1fr);gap:10px}
+  .card{padding:16px 18px;gap:6px}
+  .card p{font-size:14px}
+  .card .rule{padding-top:10px}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .stackfig{flex-direction:row;width:auto;align-items:flex-start}
+  .stackfig div{width:40px;height:40px;padding:4px;align-items:flex-start;justify-content:flex-start}
+  .stackfig div.tall{height:72px}
+  .stackfig div span:last-child{display:none}
+  .p4 .split{grid-template-columns:minmax(0,1fr)}
+  .snap{gap:28px}
+}
+@media (prefers-reduced-motion: reduce){ .chip .dot{animation:none!important} }
+</style>
+
+<div class="viewport" id="viewport">
+  <div class="track" id="track">
+
+    <section class="page p1" data-name="開場" tabindex="-1" aria-label="第 1 頁，開場">
+      <div class="inner snap">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">Fullpage 示範 · 共 5 頁</p>
+            <h1>一次滑動，<br>換一頁。</h1>
+            <p class="lead">滑鼠滾輪、觸控板和手機手勢都能切換頁面。第三頁是一般捲動的長頁。每次換頁後會停頓約 0.35 秒，避免一口氣連跳好幾頁。</p>
+          </div>
+          <figure class="stackfig" aria-hidden="true">
+            <div class="on"><span>1</span><span>全頁</span></div>
+            <div><span>2</span><span>全頁</span></div>
+            <div class="tall"><span>3</span><span>長頁</span></div>
+            <div><span>4</span><span>全頁</span></div>
+            <div><span>5</span><span>全頁</span></div>
+          </figure>
+        </div>
+        <p class="cue">往下滑，或按鍵盤 ↓</p>
+      </div>
+    </section>
+
+    <section class="page p2" data-name="輸入裝置" tabindex="-1" aria-label="第 2 頁，輸入裝置">
+      <div class="inner snap">
+        <div class="head">
+          <p class="eyebrow">三種裝置，三種判斷</p>
+          <h2>同一個動作，<br>不同的訊號。</h2>
+          <p>滾輪送出的是一格一格的大位移，觸控板是一連串細小位移加上放手後的慣性，手機則是手指拖動。三者分開處理，才不會有的太敏感、有的滑不動。</p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <span class="tag">MOUSE WHEEL</span>
+            <h3>滑鼠滾輪：一格就換頁</h3>
+            <p>滾一格大約 100px，直接超過門檻。換頁後要先停手一下，下一格才會算數。</p>
+            <div class="rule"><span>門檻 50px</span><span>靜止 180ms</span></div>
+          </article>
+          <article class="card">
+            <span class="tag">TRACKPAD</span>
+            <h3>觸控板：累積到門檻才換</h3>
+            <p>細小位移會累加。放手後的慣性會被略過，除非偵測到新的一次加速。</p>
+            <div class="rule"><span>門檻 50px</span><span>略過慣性</span></div>
+          </article>
+          <article class="card">
+            <span class="tag">TOUCH</span>
+            <h3>手機：頁面跟著手指走</h3>
+            <p>拖動時整頁跟著移動。放開時距離或速度夠了就換頁，不夠就彈回原位。</p>
+            <div class="rule"><span>距離 60px</span><span>或 0.35px/ms</span></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="page p3" data-name="長頁" tabindex="-1" aria-label="第 3 頁，長頁" id="longPage">
+      <div class="inner">
+        <div class="long">
+          <p class="edge-hint" id="hintUp">在最頂端往上滑一次，會回到第 2 頁。</p>
+
+          <div class="intro">
+            <p class="eyebrow">第三頁 · 一般捲動</p>
+            <h2>這一頁可以<br>慢慢往下讀。</h2>
+            <p>在這一頁，滾輪、觸控板和手指都會像一般網頁一樣捲動內容。只有捲到最頂或最底，再多滑一次，才會切換到相鄰的頁面。右側導覽列中較長的那一格，會顯示這一頁讀到哪裡。</p>
+          </div>
+
+          <section>
+            <h3>為什麼長頁要另外處理</h3>
+            <p>全頁滑動的做法，是把每一頁疊成一條長軌道，換頁時整條軌道往上或往下移動一個螢幕高。如果某一頁的內容比螢幕還長，直接套用就會出問題：使用者還沒讀完，下一次滾動就把整頁帶走了。</p>
+            <p>所以這一頁本身是一個可以捲動的容器。滾動事件進來時，程式先問一件事：<strong>這一頁在這個方向還能不能再捲？</strong>能捲，就交給瀏覽器原生捲動；不能捲，才當成換頁的指令。</p>
+          </section>
+
+          <section>
+            <h3>到邊緣時發生什麼</h3>
+            <p>最容易出錯的是「捲到底的那一刻」。用觸控板快速一撥，內容會帶著慣性滑到底，而慣性還會繼續送出滾動事件好一陣子。如果這些餘波直接拿來換頁，讀者會在毫無預期的情況下被帶到第 4 頁。</p>
+            <p>因此程式會記下「是從頁內捲到邊緣」這件事，接著做兩道確認：</p>
+            <ol class="steps">
+              <li>在邊緣停留至少 400ms，避免同一下滑動就直接穿出去。</li>
+              <li>必須是一次新的手勢：滾輪靜止超過 180ms 之後再滾，或觸控板出現明顯的重新加速。</li>
+            </ol>
+            <p>兩個條件都符合，才會換頁。實際用起來的感覺是：捲到底，停一下，再滑一次，就到下一頁。</p>
+          </section>
+
+          <section>
+            <h3>觸控板的慣性怎麼分辨</h3>
+            <p>觸控板放手後的慣性，位移量會一格比一格小，像是 30、24、18、13、9……逐漸衰減。新的一次滑動則相反，位移會突然變大。程式比較相鄰兩次的位移：如果這一次是上一次的兩倍以上，而且至少多出 8px，就當作新的手勢。</p>
+            <p>另一個判斷是時間。只要兩次滾動事件之間隔了 180ms 以上，不論位移大小，都視為新的開始。滑鼠滾輪多半走這條路：每一格之間本來就有間隔。</p>
+          </section>
+
+          <section>
+            <h3>手機上的長頁</h3>
+            <p>手機不需要猜慣性，因為每次手指按下去，都是一個明確的新動作。程式在手指按下時記錄這一頁是否已經在頂端或底端，再看手指往哪個方向移動：</p>
+            <ol class="steps">
+              <li>往還能捲的方向拖：交給瀏覽器原生捲動，包含放手後的慣性。</li>
+              <li>已經在底端還往上推（或在頂端還往下拉）：改成拖動整頁，放開後決定要不要換頁。</li>
+            </ol>
+            <p>頁面容器設定了 <code>overscroll-behavior: contain</code>，原生捲動到底時不會把動量傳給外層，也就不會意外觸發換頁。</p>
+          </section>
+
+          <section>
+            <h3>所有可調整的數值</h3>
+            <p>這些數值都集中在程式最上方的 <code>CONFIG</code> 物件，可以依內容節奏調整。</p>
+            <div class="tablewrap">
+              <table>
+                <thead><tr><th>參數</th><th>預設值</th><th>作用</th></tr></thead>
+                <tbody>
+                  <tr><td>duration</td><td class="v">700 ms</td><td>換頁動畫的時間</td></tr>
+                  <tr><td>pause</td><td class="v">350 ms</td><td>動畫結束後的停頓，期間不接受換頁</td></tr>
+                  <tr><td>wheelThreshold</td><td class="v">50 px</td><td>滾輪或觸控板累積到這個位移才換頁</td></tr>
+                  <tr><td>quietGap</td><td class="v">180 ms</td><td>滾動事件間隔超過這個時間，視為新手勢</td></tr>
+                  <tr><td>edgeHold</td><td class="v">400 ms</td><td>從頁內捲到邊緣後，至少等這麼久才可換頁</td></tr>
+                  <tr><td>touchDistance</td><td class="v">60 px</td><td>手指拖動超過這個距離就換頁</td></tr>
+                  <tr><td>touchVelocity</td><td class="v">0.35 px/ms</td><td>拖動較短但夠快時，也會換頁</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section>
+            <h3>換成自己的內容</h3>
+            <p>每一頁都是一個 <code>section.page</code>。要新增或刪減頁數，增減這些區塊即可，導覽列會自動對應。任何內容超過螢幕高度的頁面，都會自動套用長頁的行為，所以在小螢幕或橫向手機上，內容較多的全頁也不會被截掉。</p>
+<pre><span class="c">&lt;!-- 一般全頁 --&gt;</span>
+&lt;section class="page" data-name="作品"&gt;
+  &lt;div class="inner snap"&gt;…&lt;/div&gt;
+&lt;/section&gt;
+
+<span class="c">&lt;!-- 長頁：內容自然撐高即可 --&gt;</span>
+&lt;section class="page" data-name="長頁"&gt;
+  &lt;div class="inner"&gt;…很多內容…&lt;/div&gt;
+&lt;/section&gt;</pre>
+          </section>
+
+          <section>
+            <h3>鍵盤也能用</h3>
+            <p>方向鍵、Page Up / Page Down 和空白鍵都會換頁；在長頁裡則先捲動內容，到底後再按一次才換頁。Home 和 End 會直接跳到第一頁和最後一頁。</p>
+          </section>
+
+          <p class="edge-hint" id="hintDown">已經到底了。停一下，再往下滑一次，前往第 4 頁。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="page p4" data-name="停頓" tabindex="-1" aria-label="第 4 頁，停頓">
+      <div class="inner snap">
+        <div class="split">
+          <div>
+            <p class="eyebrow">換頁後的停頓</p>
+            <div class="big"><span>0.35</span><small>秒</small></div>
+            <p>動畫結束後，再等 350ms 才接受下一次換頁。這段時間短到幾乎察覺不到，但足以擋住滾輪連轉和觸控板慣性造成的連跳。</p>
+            <p>每次換頁時，右邊的時間軸都會跑一次。左下角的小標籤會即時顯示目前的狀態。</p>
+          </div>
+          <div class="timeline">
+            <div class="bar" id="bar">
+              <div class="seg move">換頁動畫 700ms</div>
+              <div class="seg rest">停頓 350ms</div>
+              <div class="head"></div>
+            </div>
+            <div class="scale"><span>0</span><span>700</span><span>1050 ms</span></div>
+            <div class="states" style="margin-top:22px">
+              <span class="k">可切換</span><span class="d">下一次滑動就會換頁</span>
+              <span class="k">換頁中</span><span class="d">動畫進行中，所有輸入暫停</span>
+              <span class="k">停頓中</span><span class="d">動畫結束後的 350ms 緩衝</span>
+              <span class="k">等待新手勢</span><span class="d">還有慣性或連續滾動，先略過</span>
+              <span class="k">頁內捲動</span><span class="d">長頁正在一般捲動</span>
+              <span class="k">已到邊緣</span><span class="d">再滑一次就會換頁</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page p5" data-name="結尾" tabindex="-1" aria-label="第 5 頁，結尾">
+      <div class="inner snap">
+        <div class="end">
+          <p class="eyebrow">第五頁 · 最後一頁</p>
+          <h2>五頁到這裡<br>就結束了。</h2>
+          <p>試試看用不同的裝置來回滑幾次：滑鼠快速連轉、觸控板用力一撥、手機在長頁底端往上推。每一種都應該只前進一頁。</p>
+          <div class="actions">
+            <button class="btn primary" type="button" id="toFirst">回到第一頁</button>
+            <button class="btn" type="button" id="toLong">再看一次長頁</button>
+          </div>
+          <p class="fine">在最後一頁繼續往下滑，頁面會輕輕回彈，表示已經沒有下一頁。</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div class="counter" aria-hidden="true"><b id="cNum">01</b><span>/ 05</span><span id="cName">開場</span></div>
+<nav class="nav" id="nav" aria-label="頁面導覽"></nav>
+<div class="chip" id="chip" data-state="ready" role="status" aria-live="polite"><span class="dot"></span><span id="chipDev">等待輸入</span><span class="sep">·</span><span id="chipState">可切換</span></div>
+
+<script>
+(() => {
+  const CONFIG = {
+    duration: 700,        // 換頁動畫 ms
+    pause: 350,           // 換頁後停頓 ms
+    wheelThreshold: 50,   // 滾輪/觸控板累積位移 px
+    quietGap: 180,        // 事件間隔超過即視為新手勢 ms
+    edgeHold: 400,        // 從頁內捲到邊緣後的最短等待 ms
+    touchDistance: 60,    // 手指拖動距離 px
+    touchVelocity: 0.35   // 手指速度 px/ms
+  };
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) CONFIG.duration = 120;
+
+  const root = document.documentElement;
+  root.style.setProperty('--dur', CONFIG.duration + 'ms');
+  root.style.setProperty('--total', (CONFIG.duration + CONFIG.pause) + 'ms');
+
+  const viewport = document.getElementById('viewport');
+  const track = document.getElementById('track');
+  const pages = [...track.querySelectorAll('.page')];
+  const N = pages.length;
+  const nav = document.getElementById('nav');
+  const chip = document.getElementById('chip');
+  const chipDev = document.getElementById('chipDev');
+  const chipState = document.getElementById('chipState');
+  const bar = document.getElementById('bar');
+  const longPage = document.getElementById('longPage');
+
+  let index = 0, locked = false, needNewGesture = false;
+  let accum = 0, lastWheelT = 0, lastAbs = 0, insideScroll = false, edgeAt = 0;
+  let timers = [], quietT = 0, wheelKind = '', keyInside = false, keyEdgeAt = 0;
+
+  /* ---------- helpers ---------- */
+  const maxScroll = p => p.scrollHeight - p.clientHeight;
+  const canScroll = (p, dir) => {
+    const m = maxScroll(p);
+    if (m <= 1) return false;
+    return dir > 0 ? p.scrollTop < m - 1 : p.scrollTop > 1;
+  };
+  const STATES = { ready:'可切換', moving:'換頁中', pause:'停頓中', wait:'等待新手勢', scroll:'頁內捲動', edge:'已到邊緣，再滑一次', end:'沒有下一頁了' };
+  let curState = '';
+  function setState(s){ if (s === curState) return; curState = s; chip.dataset.state = s; chipState.textContent = STATES[s]; }
+  function setDevice(label){ chipDev.textContent = label; }
+
+  /* ---------- nav ---------- */
+  pages.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'navbtn' + (p === longPage ? ' tall' : '');
+    b.setAttribute('aria-label', `第 ${i + 1} 頁：${p.dataset.name}`);
+    b.innerHTML = '<span class="fill"></span>';
+    b.addEventListener('click', () => { setDevice('點擊'); go(i); });
+    nav.appendChild(b);
+  });
+  const navBtns = [...nav.children];
+  pages.forEach((p, i) => p.addEventListener('scroll', () => {
+    const m = maxScroll(p);
+    navBtns[i].querySelector('.fill').style.height = (m > 1 ? (p.scrollTop / m) * 100 : 0) + '%';
+  }, { passive: true }));
+
+  function render(offset = 0){
+    track.style.transform = offset
+      ? `translate3d(0, calc(${-index * 100}% + ${offset}px), 0)`
+      : `translate3d(0, ${-index * 100}%, 0)`;
+  }
+  function updateUI(){
+    document.body.dataset.page = index + 1;
+    document.getElementById('cNum').textContent = String(index + 1).padStart(2, '0');
+    document.getElementById('cName').textContent = pages[index].dataset.name;
+    navBtns.forEach((b, i) => b.setAttribute('aria-current', i === index ? 'true' : 'false'));
+    pages.forEach((p, i) => { if (i === index) p.removeAttribute('inert'); else p.setAttribute('inert', ''); });
+  }
+
+  /* ---------- page change ---------- */
+  function go(target){
+    if (target < 0 || target >= N || target === index || locked) return false;
+    const dir = target > index ? 1 : -1;
+    const p = pages[target];
+    // 從下一頁往回走時，從長頁的底部接上；其他情況從頂部開始
+    p.scrollTop = (dir < 0 && index - target === 1) ? maxScroll(p) : 0;
+    index = target;
+    locked = true; needNewGesture = true; accum = 0; insideScroll = false; edgeAt = 0; keyInside = false;
+    document.querySelectorAll('.edge-hint.flash').forEach(h => h.classList.remove('flash'));
+    track.style.transition = '';
+    render(); updateUI(); setState('moving');
+    bar.classList.remove('run'); void bar.offsetWidth; bar.classList.add('run');
+    timers.forEach(clearTimeout);
+    timers = [
+      setTimeout(() => setState('pause'), CONFIG.duration),
+      setTimeout(() => {
+        locked = false;
+        pages[index].focus({ preventScroll: true });
+        if (performance.now() - lastWheelT > CONFIG.quietGap) { needNewGesture = false; setState('ready'); }
+        else setState('wait');
+      }, CONFIG.duration + CONFIG.pause)
+    ];
+    return true;
+  }
+  function bounce(dir){
+    if (locked) return;
+    setState('end');
+    track.style.transition = 'transform .18s ease-out';
+    render(-dir * 28);
+    setTimeout(() => { render(); setTimeout(() => { track.style.transition = ''; }, 200); }, 180);
+  }
+  function flashEdge(dir){
+    const h = dir > 0 ? document.getElementById('hintDown') : document.getElementById('hintUp');
+    if (pages[index] === longPage && h) h.classList.add('flash');
+  }
+
+  /* ---------- wheel: mouse + trackpad ---------- */
+  viewport.addEventListener('wheel', e => {
+    if (e.ctrlKey) return; // 觸控板縮放手勢
+    let dy = e.deltaY, dx = e.deltaX;
+    if (e.deltaMode === 1) { dy *= 16; dx *= 16; } else if (e.deltaMode === 2) { dy *= innerHeight; dx *= innerHeight; }
+    if (dy === 0 || Math.abs(dx) > Math.abs(dy)) return; // 水平滑動不處理
+
+    const now = performance.now();
+    const gap = now - lastWheelT; lastWheelT = now;
+    const abs = Math.abs(dy), prevAbs = lastAbs; lastAbs = abs;
+    const dir = dy > 0 ? 1 : -1;
+
+    // 推測裝置（只用於顯示）：同一手勢內出現小位移即視為觸控板
+    if (gap > CONFIG.quietGap) wheelKind = '';
+    if (e.deltaMode !== 0 || (abs >= 60 && wheelKind !== 'pad')) wheelKind = wheelKind || 'mouse';
+    if (abs < 60 && e.deltaMode === 0) wheelKind = 'pad';
+    setDevice(wheelKind === 'pad' ? '觸控板（推測）' : '滑鼠滾輪（推測）');
+
+    clearTimeout(quietT);
+    quietT = setTimeout(() => { if (!locked) { needNewGesture = false; if (curState === 'wait' || curState === 'end') setState('ready'); } }, CONFIG.quietGap);
+
+    const p = pages[index];
+    // 頁內還能捲：交給瀏覽器原生捲動
+    if (!locked && canScroll(p, dir)) {
+      insideScroll = true; accum = 0; edgeAt = 0;
+      document.querySelectorAll('.edge-hint.flash').forEach(h => h.classList.remove('flash'));
+      setState('scroll');
+      return;
+    }
+    e.preventDefault();
+    if (locked) return;
+
+    // 剛從頁內捲到邊緣：這一下不算，要求新手勢
+    if (insideScroll) {
+      insideScroll = false; needNewGesture = true; edgeAt = now;
+      flashEdge(dir); setState('edge');
+      return;
+    }
+    if (needNewGesture) {
+      const accel = abs > prevAbs * 2 && abs - prevAbs > 8;
+      if (gap > CONFIG.quietGap || accel) { needNewGesture = false; accum = 0; }
+      else { if (curState !== 'edge') setState('wait'); return; }
+    }
+    if (edgeAt && now - edgeAt < CONFIG.edgeHold) return;
+
+    if (gap > CONFIG.quietGap || Math.sign(accum) !== dir) accum = 0;
+    accum += dy;
+    if (Math.abs(accum) >= CONFIG.wheelThreshold) {
+      accum = 0;
+      if (!go(index + dir)) { needNewGesture = true; bounce(dir); }
+    } else if (curState !== 'edge') setState('ready');
+  }, { passive: false });
+
+  /* ---------- touch ---------- */
+  let t = null;
+  viewport.addEventListener('touchstart', e => {
+    if (e.touches.length > 1) { t = null; return; }
+    const p = pages[index], pt = e.touches[0];
+    t = { x: pt.clientX, y: pt.clientY, mode: null, dy: 0, top: !canScroll(p, -1), bottom: !canScroll(p, 1),
+          hist: [{ y: pt.clientY, t: performance.now() }] };
+    setDevice('觸控');
+  }, { passive: true });
+
+  viewport.addEventListener('touchmove', e => {
+    if (!t) return;
+    const pt = e.touches[0];
+    const dy = pt.clientY - t.y, dx = pt.clientX - t.x;
+    if (t.mode === null) {
+      if (Math.abs(dy) < 6 && Math.abs(dx) < 6) return;
+      if (Math.abs(dx) > Math.abs(dy)) { t.mode = 'native'; return; }
+      const wantDir = dy < 0 ? 1 : -1; // 手指往上 = 下一頁
+      const atEdge = wantDir > 0 ? t.bottom : t.top;
+      t.mode = (locked || atEdge) ? 'page' : 'native';
+      if (t.mode === 'native') setState('scroll');
+    }
+    if (t.mode === 'native') return;
+    if (e.cancelable) e.preventDefault();
+    if (locked) return;
+    t.dy = dy;
+    t.hist.push({ y: pt.clientY, t: performance.now() });
+    if (t.hist.length > 5) t.hist.shift();
+    const target = index + (dy < 0 ? 1 : -1);
+    const off = (target < 0 || target >= N) ? dy * 0.25 : dy * 0.9;
+    track.style.transition = 'none';
+    render(off);
+  }, { passive: false });
+
+  function endTouch(){
+    if (!t) return;
+    const s = t; t = null;
+    if (s.mode !== 'page' || locked) { track.style.transition = ''; if (!locked) render(); return; }
+    const h = s.hist, a = h[0], b = h[h.length - 1];
+    const v = b.t > a.t ? Math.abs(b.y - a.y) / (b.t - a.t) : 0;
+    const dir = s.dy < 0 ? 1 : -1;
+    const passed = Math.abs(s.dy) > CONFIG.touchDistance || (v > CONFIG.touchVelocity && Math.abs(s.dy) > 15);
+    track.style.transition = '';
+    if (passed && go(index + dir)) return;
+    render();
+    if (passed) setState('end'); else setState('ready');
+  }
+  viewport.addEventListener('touchend', endTouch);
+  viewport.addEventListener('touchcancel', endTouch);
+
+  /* ---------- keyboard ---------- */
+  addEventListener('keydown', e => {
+    const tag = (e.target.tagName || '').toLowerCase();
+    if ((tag === 'button' || tag === 'a') && (e.key === ' ' || e.key === 'Enter')) return;
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    let dir = 0;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || (e.key === ' ' && !e.shiftKey)) dir = 1;
+    else if (e.key === 'ArrowUp' || e.key === 'PageUp' || (e.key === ' ' && e.shiftKey)) dir = -1;
+    else if (e.key === 'Home') { e.preventDefault(); setDevice('鍵盤'); go(0); return; }
+    else if (e.key === 'End') { e.preventDefault(); setDevice('鍵盤'); go(N - 1); return; }
+    if (!dir) return;
+    e.preventDefault();
+    setDevice('鍵盤');
+    if (locked) return;
+    const p = pages[index];
+    if (canScroll(p, dir)) {
+      const step = e.key.startsWith('Arrow') ? 80 : p.clientHeight * 0.85;
+      p.scrollBy({ top: dir * step, behavior: 'smooth' });
+      keyInside = true; setState('scroll');
+      return;
+    }
+    const now = performance.now();
+    if (keyInside) { keyInside = false; keyEdgeAt = now; flashEdge(dir); setState('edge'); return; }
+    if (keyEdgeAt && now - keyEdgeAt < 300) return;
+    keyEdgeAt = 0;
+    if (!go(index + dir)) bounce(dir);
+  });
+
+  /* ---------- misc ---------- */
+  viewport.addEventListener('scroll', () => { viewport.scrollTop = 0; }); // 防止焦點移動把外層捲走
+  document.getElementById('toFirst').addEventListener('click', () => { setDevice('點擊'); go(0); });
+  document.getElementById('toLong').addEventListener('click', () => { setDevice('點擊'); go(2); });
+
+  updateUI(); render(); setState('ready');
+})();
+</script>
+
+</body></html>
