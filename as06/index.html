@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>滑頁網頁</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 關掉原生捲動，改由 JS 控制 */
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* 所有頁面放在同一個容器裡，彼此相連；移動的是整個容器 */
+    #wrapper {
+      will-change: transform;
+    }
+
+    .page {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      font-size: 48px;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+    }
+
+    .page:nth-child(1) { background: #e74c3c; }
+    .page:nth-child(2) { background: #f39c12; }
+    .page:nth-child(4) { background: #2980b9; }
+    .page:nth-child(5) { background: #8e44ad; }
+
+    /* 第三頁：200vh，頁內改為一般平滑捲動 */
+    .page.free {
+      height: 200vh;
+      display: block;
+    }
+
+    .half {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .half.top    { background: #27ae60; }
+    .half.bottom { background: #1e8449; }
+  </style>
+</head>
+<body>
+  <div id="wrapper">
+    <div class="page">第一頁</div>
+    <div class="page">第二頁</div>
+    <div class="page free">
+      <div class="half top">第三頁（上半）</div>
+      <div class="half bottom">第三頁（下半）</div>
+    </div>
+    <div class="page">第四頁</div>
+    <div class="page">第五頁</div>
+  </div>
+
+  <script>
+    const wrapper = document.getElementById('wrapper');
+    const pages = [...document.querySelectorAll('.page')];
+    const total = pages.length;
+
+    // ===== 可調整的設定 =====
+    const LOCK_TIME = 600;          // 換頁後鎖住的時間(ms)
+    const BOUNDARY_DELAY = 400;     // 滑鼠在第三頁捲到頂/底後，要停多久(ms)再滾才換頁，避免一路滾過頭
+    const SNAP_TRANSITION     = 'transform 0.8s cubic-bezier(0.77, 0, 0.175, 1)'; // 換頁動畫
+    const WHEEL_TRANSITION    = 'transform 0.4s ease-out';                        // 滑鼠在第三頁內的平滑捲動
+    const TRACKPAD_TRANSITION = 'transform 0.15s ease-out';                       // 觸控板在第三頁內的捲動
+    const FLING_TRANSITION    = 'transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)'; // 手機放開後的慣性
+
+    // ===== 觸控板專用設定（不影響滑鼠與手機）=====
+    const TRACKPAD_THRESHOLD = 60;  // 觸控板要累積多少滑動量才換頁，越大越不靈敏
+    const GESTURE_GAP = 200;        // 停止滑動多久(ms)才算一次手勢結束
+
+    let current = 0;        // 目前在第幾頁(index)
+    let offset = 0;         // 容器目前往上移動了多少 px
+    let locked = false;
+    let boundaryReachedAt = 0;
+
+    const isFree = (i) => pages[i].classList.contains('free');
+    const minOffset = (i) => pages[i].offsetTop;
+    const maxOffset = (i) => isFree(i)
+      ? pages[i].offsetTop + pages[i].offsetHeight - window.innerHeight
+      : pages[i].offsetTop;
+
+    function render(transition) {
+      wrapper.style.transition = transition;
+      wrapper.style.transform = `translateY(${-offset}px)`;
+    }
+
+    // 換頁；往上回到第三頁時停在它的底部，往下進入時停在頂部
+    function move(dir) {
+      const index = current + dir;
+      if (locked || index < 0 || index >= total) return;
+      current = index;
+      offset = dir < 0 ? maxOffset(index) : minOffset(index);
+      locked = true;
+      render(SNAP_TRANSITION);
+      setTimeout(() => { locked = false; }, LOCK_TIME);
+    }
+
+    // 在第三頁內自由捲動；已經到頂/底而無法再捲時回傳 false
+    function freeScroll(delta, transition) {
+      const min = minOffset(current);
+      const max = maxOffset(current);
+      if (delta > 0 && offset >= max) return false;
+      if (delta < 0 && offset <= min) return false;
+      offset = Math.min(max, Math.max(min, offset + delta));
+      if (offset === max || offset === min) boundaryReachedAt = Date.now();
+      render(transition);
+      return true;
+    }
+
+    // ===== 滾輪 / 觸控板 =====
+    let trackpadAcc = 0;
+    let gestureUsed = false;
+    let gestureTimer = null;
+
+    // 滑鼠滾輪每格的量很大(約100以上)；觸控板是一連串很小的數值
+    function isTrackpad(e) {
+      return e.deltaMode === 0 && Math.abs(e.deltaY) < 50;
+    }
+
+    window.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      if (locked) return;
+      const dy = e.deltaMode === 1 ? e.deltaY * 40 : e.deltaY; // Firefox 以「行」為單位時換算成 px
+
+      // --- 觸控板 ---
+      if (isTrackpad(e)) {
+        clearTimeout(gestureTimer);
+        gestureTimer = setTimeout(() => {
+          trackpadAcc = 0;
+          gestureUsed = false;
+        }, GESTURE_GAP);
+
+        // 第三頁內：直接跟著手指捲動；這次手勢捲到頂/底後，要再撥一次才換頁
+        if (isFree(current) && freeScroll(dy, TRACKPAD_TRANSITION)) {
+          gestureUsed = true;
+          trackpadAcc = 0;
+          return;
+        }
+
+        if (gestureUsed) return;
+        trackpadAcc += dy;
+        if (Math.abs(trackpadAcc) >= TRACKPAD_THRESHOLD) {
+          gestureUsed = true;
+          move(trackpadAcc > 0 ? 1 : -1);
+        }
+        return;
+      }
+
+      // --- 滑鼠滾輪 ---
+      if (Math.abs(dy) < 5) return;
+      if (isFree(current)) {
+        if (freeScroll(dy, WHEEL_TRANSITION)) return;
+        if (Date.now() - boundaryReachedAt < BOUNDARY_DELAY) return; // 剛捲到底，先停一下
+      }
+      move(dy > 0 ? 1 : -1);
+    }, { passive: false });
+
+    // ===== 鍵盤 =====
+    window.addEventListener('keydown', (e) => {
+      if (locked) return;
+      const step = {
+        ArrowDown: 0.3, PageDown: 0.9, ArrowUp: -0.3, PageUp: -0.9
+      }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      if (isFree(current) && freeScroll(step * window.innerHeight, WHEEL_TRANSITION)) return;
+      move(step > 0 ? 1 : -1);
+    });
+
+    // ===== 手機觸控 =====
+    let touchStartY = 0, touchLastY = 0, touchStartOffset = 0;
+    let lastMoveTime = 0, velocity = 0;
+
+    window.addEventListener('touchstart', (e) => {
+      touchStartY = touchLastY = e.touches[0].clientY;
+      touchStartOffset = offset;
+      lastMoveTime = Date.now();
+      velocity = 0;
+    }, { passive: true });
+
+    window.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // 避免瀏覽器自己的下拉重新整理等行為
+      if (locked || !isFree(current)) return;
+      const y = e.touches[0].clientY;
+      const now = Date.now();
+      const d = touchLastY - y;
+      velocity = d / Math.max(1, now - lastMoveTime);
+      touchLastY = y;
+      lastMoveTime = now;
+      freeScroll(d, 'none'); // 第三頁內跟著手指移動
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      const diff = touchStartY - e.changedTouches[0].clientY;
+
+      if (isFree(current) && !locked) {
+        const startedAtBottom = touchStartOffset >= maxOffset(current) - 1;
+        const startedAtTop    = touchStartOffset <= minOffset(current) + 1;
+        // 只有「一開始就在頂/底」再往外滑，才換頁
+        if (diff > 50 && startedAtBottom) return move(1);
+        if (diff < -50 && startedAtTop) return move(-1);
+        // 否則加上放開後的慣性
+        if (Math.abs(velocity) > 0.2 && Date.now() - lastMoveTime < 100) {
+          freeScroll(velocity * 250, FLING_TRANSITION);
+        }
+        return;
+      }
+
+      if (Math.abs(diff) > 50) move(diff > 0 ? 1 : -1);
+    });
+
+    // ===== 視窗大小改變時重新對齊 =====
+    window.addEventListener('resize', () => {
+      offset = Math.min(maxOffset(current), Math.max(minOffset(current), offset));
+      render('none');
+    });
+  </script>
+</body>
+</html>
